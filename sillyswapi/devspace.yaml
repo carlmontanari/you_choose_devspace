@@ -1,0 +1,102 @@
+version: v2beta1
+name: you-choose-devspace
+
+dependencies:
+  dev:
+    path: ../dev/
+
+vars:
+  # make sure you have push/pull access to whatever registry you use or use local registry feature!
+  # if you are using localRegsitry you can set this to an empty string!
+  REGISTRY: 172.31.254.11/
+  DATABASE_IMAGE: ${REGISTRY}sillyswapi/db
+  SWAPI_IMAGE: ${REGISTRY}sillyswapi/swapi
+  CLIENT_IMAGE: ${REGISTRY}sillyswapi/client
+  DEVSPACE_FLAGS: "-n you-choose-devspace"
+
+# If you are not pushing to a "real" registry/using docker desktop kubernetes you can enable the local
+# registry feature to spin up a registry in your cluster
+localRegistry:
+  enabled: False
+
+# Information on how to build our images
+images:
+  db:
+    image: ${DATABASE_IMAGE}
+    context: ./database
+    dockerfile: ./database/Dockerfile
+    rebuildStrategy: ignoreContextChanges
+  swapi:
+    image: ${SWAPI_IMAGE}
+    context: ./swapi
+    dockerfile: ./swapi/Dockerfile
+    rebuildStrategy: ignoreContextChanges
+  client:
+    image: ${CLIENT_IMAGE}
+    context: ./client
+    dockerfile: ./client/Dockerfile
+    rebuildStrategy: ignoreContextChanges
+
+commands:
+  lint:
+    description: lint all sillyswapi packages
+    command: |-
+      python3 -m black client/
+      python3 -m black swapi/
+
+# How to deploy the application(s), in this case we'll use our helm chart
+deployments:
+  sillyswapi:
+    helm:
+      displayOutput: true
+      chart:
+        name: ./chart
+      values:
+        db:
+          image: ${DATABASE_IMAGE}
+        swapi:
+          image: ${SWAPI_IMAGE}
+        client:
+          image: ${CLIENT_IMAGE}
+
+# Ways to develop against our application
+dev:
+  sillyswapi-swapi:
+    imageSelector: ${SWAPI_IMAGE}
+    devImage: ${SWAPI_IMAGE}
+    sync:
+      - path: ./swapi:/sillyswapi/
+        onUpload:
+          exec:
+            - command: /sillyswapi/start-or-restart-uvicorn.sh
+    command: ["sleep"]
+    args: ["infinity"]
+    ports:
+      - port: "8888:80"
+    ssh: {}
+    proxyCommands:
+      - gitCredentials: true
+      - command: kubectl
+  sillyswapi-client:
+    imageSelector: ${CLIENT_IMAGE}
+    devImage: ${runtime.dependencies.dev.images.dev}
+    sync:
+      - path: ./client:/sillyswapi/
+        disableDownload: true
+    terminal:
+      command: /sillyswapi/devspace_start.sh
+    proxyCommands:
+      - gitCredentials: true
+      - command: kubectl
+
+# Profiles, we'll create a "prod" profile where we dont replace any of the images
+# so we use the "real" image default value in the chart.
+profiles:
+  - name: production
+    patches:
+      - op: remove
+        path: deployments.sillyswapi.helm.values.db.image
+      - op: remove
+        path: deployments.sillyswapi.helm.values.db.image
+      - op: remove
+        path: deployments.sillyswapi.helm.values.db.image

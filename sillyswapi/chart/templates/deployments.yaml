@@ -1,0 +1,131 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sillyswapi-db
+  namespace: {{ .Release.Namespace }}
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    app: {{ .Values.appName }}
+    name: "{{ .Values.appName }}-db"
+    component: db
+  annotations: {}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+      release: {{ .Release.Name }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+        app: {{ .Values.appName }}
+        name: "{{ .Values.appName }}-db"
+        component: db
+      annotations: {}
+    spec:
+      containers:
+        - name: db
+          image: {{ .Values.db.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sillyswapi-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    app: {{ .Values.appName }}
+    name: "{{ .Values.appName }}-api"
+    component: api
+  annotations: {}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+      release: {{ .Release.Name }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+        app: {{ .Values.appName }}
+        name: "{{ .Values.appName }}-api"
+        component: api
+      annotations: {}
+    spec:
+      containers:
+        - name: api
+          image: {{ .Values.swapi.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sillyswapi-client
+  namespace: {{ .Release.Namespace }}
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    app: {{ .Values.appName }}
+    name: "{{ .Values.appName }}-client"
+    component: client
+  annotations: {}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+      release: {{ .Release.Name }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+        app: {{ .Values.appName }}
+        name: "{{ .Values.appName }}-client"
+        component: client
+      annotations: {}
+    spec:
+      containers:
+        - name: client
+          image: {{ .Values.client.image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace

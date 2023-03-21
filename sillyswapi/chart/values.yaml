@@ -1,0 +1,12 @@
+appName: sillyswapi
+
+imagePullPolicy: IfNotPresent
+
+db:
+  image: sillyswapi/db:latest
+
+swapi:
+  image: sillyswapi/swapi:latest
+
+client:
+  image: sillyswapi/client:latest

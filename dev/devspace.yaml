@@ -1,0 +1,22 @@
+version: v2beta1
+name: you-choose-devspace-dev
+
+vars:
+  # make sure you have push/pull access to whatever registry you use or use local registry feature!
+  # if you are using localRegsitry you can set this to an empty string!
+  REGISTRY: 172.31.254.11/
+  DEV_IMAGE: ${REGISTRY}sillyswapi/dev
+  DEVSPACE_FLAGS: "-n you-choose-devspace"
+
+# If you are not pushing to a "real" registry/using docker desktop kubernetes you can enable the local
+# registry feature to spin up a registry in your cluster
+localRegistry:
+  enabled: False
+
+# Information on how to build our images
+images:
+  dev:
+    image: ${DEV_IMAGE}
+    context: .
+    dockerfile: ./Dockerfile
+    rebuildStrategy: ignoreContextChanges

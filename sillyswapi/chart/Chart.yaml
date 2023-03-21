@@ -1,0 +1,8 @@
+---
+apiVersion: v2
+name: sillyswapi
+description: A silly Star Wars API thingy
+maintainers:
+  - name: Nobody, literally nobody is maintaining this
+type: application
+version: 0.0.1
